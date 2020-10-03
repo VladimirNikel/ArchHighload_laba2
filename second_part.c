@@ -1,45 +1,38 @@
+#define _GNU_SOURCE
+#include <unistd.h>								//sethostname()
+#include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <syscall.h>
-#include <string.h>
-#include <string.h>
-//#include <stddef.h>		//wchar_t
+#include <sched.h>								//CLONE_NEWPID | CLONE_NEWNET | CLONE_NEWNS | SIGCHLD
+//#include <sys/mount.h>
+#include <time.h>								//rand()
+#include <sys/wait.h>							//sleep()
+#include <sys/utsname.h>						//struct utsname
 
-/*
+static char child_stack[1048576];
+char str[201]="";
 
-cat /home/nikel/Шаблоны/bootstrap_log.txt
-
-*/
-
-int exec_process_with_isolation(){
-	//необходимо сменить корень
-	if(chroot(p, uap, retval) == 0 )	//если удалось сменить корень файловой системы - продолжаем работу
-		/*
-		truct proc *p;
-		struct chroot_args *uap;
-		int *retval;
-		*/
-	{
-
-	}
-	else{
-		printf("\n\t\tАлярм!\tАлярм!\tАлярм!\n\t\tМне не удалось произвести смену корня файловой системы... Думай. Хы :)\n")
-		return -1;						// код ошибки, что не удалось сменить корень файловой системы...
-	}
-
-
-
-
-
+void print_nodename(){
+	struct utsname utsname;
+	uname(&utsname);
+	printf("%s\n", utsname.nodename);
 }
 
+int child_fn(){
+	printf("\nПервоначальное имя узла:");
+	print_nodename();
+	//printf("Имя будет изменено в новом пространстве имён!\n");
+	//генерация рандомного имени - числа
+	char newNodename[10];
+	sprintf(newNodename, "%d", rand());
+	sethostname(newNodename, 11);				//NedoDocker 11
 
+	printf("Новое имя узла: ");
+	print_nodename();
 
-int main(int argc, char **argv)
-{
-	printf("Введите относительный путь запускаемой команды (вместе с параметрами): ");
-	char str[201]="";
-	gets(str);
+	//полезная нагрузка
+	printf("Родительский PID: %ld\n", (long)getppid());
+	printf("Мой PID: %ld\n\n", (long)getpid());
+
 
 	//выполнение введеной программы
 	printf("\nВывод программы\n=================================================\n");
@@ -47,8 +40,17 @@ int main(int argc, char **argv)
 		printf("\n=================================================\n\tПрограмма \"упала\". А я вырубаюсь.");
 	else
 		printf("\n=================================================\nПрограмма корректно завершилась - не паримся и не тратим ресурсы компьютера. Я спать.");
-
 	printf("\n\n\tСпасибо, что пользуетесь этим недоDocker'ом.\nNikel (c)\n");
+	return 0;
+}
+
+int main(int argc, char **argv){
+	srand(time(NULL));
+	printf("Введите относительный путь запускаемой команды (вместе с параметрами): ");
+	gets(str);
+	pid_t child_pid = clone(child_fn, child_stack+1048576, CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWNET | SIGCHLD, NULL);
+	sleep(1);
+	waitpid(child_pid, NULL, 0);
 	return 0;
 }
 
