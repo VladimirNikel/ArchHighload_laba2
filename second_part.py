@@ -12,7 +12,7 @@ list_param.append(input('Введите полный путь исполняем
 kol_vo_parametrov = int(input('Введите количество передаваемых параметров вместе с программой: '))
 if kol_vo_parametrov > 0:
 	for i in range(kol_vo_parametrov):
-		list_param.append(input('Введите параметры к исполняемому файлу: '))
+		list_param.append(input('\tВведите ' + str(i+1) + ' параметр к исполняемому файлу: '))
 
 
 
@@ -32,6 +32,8 @@ print('hostname = ', socket.gethostname())
 
 #Функция os.getcwd возвращает текущий каталог
 print('pwd = ', os.getcwd())
+
+print('сеть = ')
 
 #вывод информации о PID'е текущего процесса
 print('PID = ', os.getpid())
