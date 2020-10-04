@@ -1,7 +1,8 @@
-#define _GNU_SOURCE
-#define CLONE_NEWNS
-#define CLONE_NEWPID
-#define CLONE_NEWNET
+#define _GNU_SOURCE								//доступ к низкоуровневым функции
+#define CLONE_NEWNS								//изоляция файловой системы
+#define CLONE_NEWPID							//изоляция PID'ов процессов
+#define CLONE_NEWNET							//изоляция сетей
+#define CLONE_NEWUTS							//изоляция системных идентификаторов
 #define SIGCHLD
 #include <unistd.h>								//sethostname()
 #include <stdlib.h>
@@ -37,7 +38,7 @@ int child_fn(){
 
 	//выполнение введеной программы
 	printf("\nВывод программы\n==================================================\n");
-	if(system(str) != 0)											//выполнение введеной команды, и если возвращаемое значение не 0 - орём, паникуем, плачем
+	if(system(str) != 0)											//выполнение введенной команды, и если возвращаемое значение не 0 - орём, паникуем, плачем
 		printf("\n==================================================\n\tПрограмма \"упала\". Ну и я вырубаюсь.");
 	else															//иначе - всё ок, идем довольными спать
 		printf("\n==================================================\nПрограмма корректно завершилась. Я сделал всё что мог и пошёл довольным спать.");
@@ -46,10 +47,10 @@ int child_fn(){
 }
 
 pid_t create_clone(void **stack, int kb){
-	int stack_size = kb * 1024;										//сколько килобайт выделим процессу (для его стека)		по dafault: 1G
+	int stack_size = kb * 1024;										//сколько килобайт выделим процессу (для его стека)		по default: 1G
 	*stack = malloc(stack_size);
 	void *stack_top = (char *) *stack + stack_size;					//выделение указанного адресного пространства
-	return clone(child_fn, stack_top, flags, NULL);					//создание клона процесса с изоляцией в соотвествии с флагами
+	return clone(child_fn, stack_top, flags, NULL);					//создание клона процесса с изоляцией в соответствии с флагами
 }
 
 int main(int argc, char **argv){
@@ -95,6 +96,9 @@ int main(int argc, char **argv){
 				break;
 		}
 	}
+	else{
+		printf("Допустим... Едем дальше.\n")
+	}
 	
 	void *stack;
 	pid_t child_pid = create_clone(&stack, kb);
@@ -103,7 +107,3 @@ int main(int argc, char **argv){
 	free(stack);
 	return 0;
 }
-
-
-
-
