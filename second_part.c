@@ -7,12 +7,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sched.h>								//CLONE_NEWPID | CLONE_NEWNET | CLONE_NEWNS | SIGCHLD
-//#include <sys/mount.h>
 #include <time.h>								//rand()
 #include <sys/wait.h>							//sleep()
 #include <sys/utsname.h>						//struct utsname
 #include <string.h>
-
 
 char str[1001]="";								//объявление переменной, в которой будет храниться команда и ее аргументы
 int flags = CLONE_NEWUTS | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWNET | SIGCHLD;
@@ -24,21 +22,18 @@ void print_nodename(){
 }
 
 int child_fn(){
-	printf("\nПервоначальное имя узла:");
+	printf("\nПервоначальное имя узла: ");
 	print_nodename();
 	//генерация рандомного имени - числа
-	char newNodename[24];
-	sprintf(newNodename, "%d", rand());
+	char newNodename[20];
+	sprintf(newNodename, "%9d", rand());
 	strcat(newNodename, "-NedoDocker");
-	sethostname(newNodename, 23);				//NedoDocker 11
-
+	sethostname(newNodename, 20);
 	printf("Новое имя узла: ");
 	print_nodename();
 
-	//полезная нагрузка
 	printf("Родительский PID: %ld\n", (long)getppid());
 	printf("Мой PID: %ld\n\n", (long)getpid());
-
 
 	//выполнение введеной программы
 	printf("\nВывод программы\n==================================================\n");
@@ -51,18 +46,16 @@ int child_fn(){
 }
 
 pid_t create_clone(void **stack, int kb){
-	int stack_size = kb * 1024;										//сколько килобайт выделим процессу (для его стека)
+	int stack_size = kb * 1024;										//сколько килобайт выделим процессу (для его стека)		по dafault: 1G
 	*stack = malloc(stack_size);
-	void *stack_top = (char *) *stack + stack_size;					//
+	void *stack_top = (char *) *stack + stack_size;					//выделение указанного адресного пространства
 	return clone(child_fn, stack_top, flags, NULL);					//создание клона процесса с изоляцией в соотвествии с флагами
 }
 
 int main(int argc, char **argv){
 	srand(time(NULL));
-	printf("**************************************************\nАвтор: Ниемисто Владимир, М3О-117М-20\nНазвание программы: \"Жалкое подобие Docker'а\"\nОписание: Эта вундер-вафля умеет запускать изолировано процессы, с возможностью ограничивать процесс по доступной ему памяти.\n**************************************************\n\n");
-
+	printf("**************************************************\nАвтор: Ниемисто Владимир [Nikel], М3О-117М-20\nНазвание программы: \"Жалкое подобие Docker'а\"\nОписание: Эта вундер-вафля умеет запускать процессы с изоляцией:\n\t1. Пространства имён\n\t2. PID'ов процессов\n\t3. Пространства имён NET\n\t4. Файловой системе\nИ позволяет ограничивать процесс по доступной ему памяти.\n**************************************************\n\n");
 	printf("1. Введите относительный путь запускаемой команды (вместе с параметрами): ");
-	//gets(str);					//путь запускаемой команды
 	fgets(str, 1000, stdin);		//путь запускаемой команды
 	
 	int kb = 0;
@@ -70,14 +63,12 @@ int main(int argc, char **argv){
 		printf("2. Введите размер передаваемого стека (в килобайтах): ");
 		scanf("%d", &kb);
 	}
-	
-	/*
+
 	printf("\n\nПо умолчанию используется изоляция по:\n\t1. Пространству имён\n\t2. PID'ам процессов\n\t3. Пространству имён NET\n\t4. Файловой системе\n");
-	char result[5]="";
-	printf("\nЖелаете внести изменения (отключив какую-нибудь изоляцию)? (Y/n): ");
-	//fgets(result, 4, stdin);
-	scanf("%2s", result);
-	if((int)result[1] == (char)'Y' || (int)result[1] == (char)'y' ){					// Y- 89, y - 121
+	int result;
+	printf("\nЖелаете внести изменения (отключив какую-нибудь изоляцию)? (1 - да/2 - нет): ");
+	scanf("%d", &result);
+	if(result == 1){
 		printf("Хорошо, какую изоляцию отключить?\n\t1. Пространства имён\n\t2. PID'ам процессов\n\t3. Пространства имён NET\n\t4. Файловой системе\n\nВведите номер отключаемой изоляции: ");
 		int isolation_off = 0;
 		scanf("%d", &isolation_off);
@@ -100,16 +91,10 @@ int main(int argc, char **argv){
 				break;
 			default:
 				printf("\tВы ввели неверные данные - я оставляю всё как было.");
-				flags = CLONE_NEWUTS | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWNET | SIGCHLD;//флаги
+				flags = CLONE_NEWUTS | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWNET | SIGCHLD;
 				break;
 		}
 	}
-	else{
-		printf("результат: %s\n", result);
-		printf("1 = %d\t2 = %d\ty = %d, Y = %d", result[1], result[2], (char)'y', (char)'Y');
-		printf("\n1 int = %d, 1 char = %d\n",(int)result[1], (char)result[1]);
-	}
-	*/
 	
 	void *stack;
 	pid_t child_pid = create_clone(&stack, kb);
