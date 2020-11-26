@@ -97,12 +97,12 @@ int main(int argc, char **argv){
 		}
 	}
 	else{
-		printf("Допустим... Едем дальше.\n")
+		printf("Допустим... Едем дальше.\n");
 	}
 	
 	void *stack;
 	pid_t child_pid = create_clone(&stack, kb);
-	//sleep(1);
+	sleep(1);
 	waitpid(child_pid, NULL, 0);
 	free(stack);
 	return 0;
